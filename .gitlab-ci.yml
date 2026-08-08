@@ -1,0 +1,39 @@
+stages:
+  - validate
+  - plan
+  - apply
+
+variables:
+  TF_ROOT: "./"   # directory containing Terraform files
+  AWS_DEFAULT_REGION: "eu-west-1" # change to your region 
+
+before_script:
+  # Install Terraform
+  - apt-get update && apt-get install -y wget unzip
+  - wget https://releases.hashicorp.com/terraform/1.9.0/terraform_1.9.0_linux_amd64.zip
+  - unzip terraform_1.9.0_linux_amd64.zip
+  - mv terraform /usr/local/bin/
+  - terraform --version
+  # Install AWS CLI
+  - apt-get install -y awscli
+  - aws --version
+
+validate:
+  stage: validate
+  script:
+    - cd $TF_ROOT
+    - terraform init -input=false
+    - terraform validate
+
+plan:
+  stage: plan
+  script:
+    - cd $TF_ROOT
+    - terraform plan -input=false -out=tfplan
+
+apply:
+  stage: apply
+  script:
+    - cd $TF_ROOT
+    - terraform apply -input=false -auto-approve tfplan
+  when: manual   # prevents auto-apply, you trigger it manually
